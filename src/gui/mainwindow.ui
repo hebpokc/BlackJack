@@ -210,6 +210,88 @@
     <layout class="QHBoxLayout" name="widgetBotCards"/>
    </widget>
   </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1280</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Меню</string>
+    </property>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="actions">
+    <property name="title">
+     <string>Действие</string>
+    </property>
+    <addaction name="actionHit"/>
+    <addaction name="actionStand"/>
+    <addaction name="actionNewGame"/>
+   </widget>
+   <widget class="QMenu" name="rules">
+    <property name="title">
+     <string>Правила</string>
+    </property>
+    <addaction name="actionRule1"/>
+    <addaction name="actionRule2"/>
+   </widget>
+   <widget class="QMenu" name="music">
+    <property name="title">
+     <string>Музыка</string>
+    </property>
+    <addaction name="actionUnmute"/>
+    <addaction name="actionMute"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="actions"/>
+   <addaction name="rules"/>
+   <addaction name="music"/>
+  </widget>
+  <action name="actionHit">
+   <property name="text">
+    <string>Взять карту</string>
+   </property>
+  </action>
+  <action name="actionStand">
+   <property name="text">
+    <string>Пропустить</string>
+   </property>
+  </action>
+  <action name="actionNewGame">
+   <property name="text">
+    <string>Новая игра</string>
+   </property>
+  </action>
+  <action name="actionRule1">
+   <property name="text">
+    <string>Против бота</string>
+   </property>
+  </action>
+  <action name="actionRule2">
+   <property name="text">
+    <string>Против другого игрока</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Выход</string>
+   </property>
+  </action>
+  <action name="actionUnmute">
+   <property name="text">
+    <string>Включить звук</string>
+   </property>
+  </action>
+  <action name="actionMute">
+   <property name="text">
+    <string>Выключить звук</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../../resources.qrc"/>

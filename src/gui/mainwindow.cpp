@@ -1,12 +1,17 @@
 #include "mainwindow.h"
+#include "menuwindow.h"
 #include "./ui_mainwindow.h"
 #include <QMessageBox>
-#include <QDebug>
+#include <QMediaPlayer>
+#include <QAudioOutput>
+#include <QUrl>
+#include <QCloseEvent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_playerTurn(true)
+    , m_currentTrackIndex(0)
 {
     ui->setupUi(this);
 
@@ -17,12 +22,30 @@ MainWindow::MainWindow(QWidget *parent)
     palette.setBrush(QPalette::Window, QBrush(bkgnd));
     this->setPalette(palette);
 
+    m_player = new QMediaPlayer(this);
+    m_audioOutput = new QAudioOutput(this);
+
+    m_player->setAudioOutput(m_audioOutput);
+
+    m_audioOutput->setVolume(50);
+
+    m_playlist << "qrc:/music/resources/music/1.mp3"
+               << "qrc:/music/resources/music/2.mp3"
+               << "qrc:/music/resources/music/3.mp3"
+               << "qrc:/music/resources/music/4.mp3";
+
+    connect(m_player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::onMediaStatusChanged);
+
+    startBackgroundMusic();
+
     startNewGame();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete m_player;
+    delete m_audioOutput;
 }
 
 void MainWindow::startNewGame() {
@@ -71,8 +94,8 @@ void MainWindow::displayCards(const std::vector<Card>& cards, QLayout* layout)
     }
 
     // Устанавливаем размер карт
-    const int cardWidth = 60;  // ширина карты
-    const int cardHeight = 90; // высота карты
+    const int cardWidth = 60;
+    const int cardHeight = 90;
 
     // Добавляем новые QLabel с картинками в layout
     for (const auto& card : cards) {
@@ -114,12 +137,11 @@ void MainWindow::displayBotCards(const std::vector<Card>& cards, QLayout* layout
             // Показываем карту, если это первая карта или если revealAll=true
             pix.load(cards[i].getImagePath());
         } else {
-            // Для остальных карт показываем рубашку карты
-            pix.load(":/cards/back.png"); // Убедись, что картинка рубашки существует в ресурсах
+            pix.load(":/cards/back.png");
         }
 
         lbl->setPixmap(pix.scaled(cardWidth, cardHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        lbl->setFixedSize(cardWidth, cardHeight);  // Устанавливаем фиксированный размер для карт
+        lbl->setFixedSize(cardWidth, cardHeight);
         layout->addWidget(lbl);
     }
 }
@@ -182,7 +204,173 @@ void MainWindow::on_buttonNewGame_clicked() {
 }
 
 void MainWindow::endGame(const QString &result) {
-    QMessageBox::information(this, "Игра окончена", result);
+    QMessageBox msgBox(this);
+
+    if (result == "Вы проиграли!") {
+        QPixmap pixmap(":/game/images/resources/lose.png");
+        pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        msgBox.setIconPixmap(pixmap);
+    }
+    else {
+        QPixmap pixmap(":/game/images/resources/win.png");
+        pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        msgBox.setIconPixmap(pixmap);
+    }
+
+    msgBox.setWindowTitle("Игра окончена");
+
+    msgBox.setText(result);
+
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+
+    msgBox.exec();
     ui->buttonHit->setEnabled(false);
     ui->buttonStand->setEnabled(false);
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    MenuWindow *menu = new MenuWindow();
+    menu->show();
+    this->close();
+}
+
+void MainWindow::on_actionHit_triggered()
+{
+    if (!m_playerTurn) return;
+
+    m_playerHand.addCard(m_desk.draw());
+    updateUI();
+
+    if (m_playerHand.getValue() > 21) {
+        endGame("Перебор! Вы проиграли");
+    }
+}
+
+void MainWindow::on_actionStand_triggered()
+{
+    if (!m_playerTurn) return;
+
+    m_playerTurn = false;
+    ui->buttonHit->setEnabled(false);
+    ui->buttonStand->setEnabled(false);
+
+    botTurn();
+}
+
+void MainWindow::on_actionNewGame_triggered()
+{
+    startNewGame();
+}
+
+void MainWindow::on_actionRule1_triggered()
+{
+    QMessageBox msgBox(this);
+
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setWindowTitle("Правила игры против бота");
+
+    msgBox.setText("1. В игре участвует игрок и бот.\n"
+                   "2. Каждый получает по две карты, открытые для игрока и закрытые для бота.\n"
+                   "3. Игрок может выбрать: взять карту (Hit) или пропустить ход (Stand).\n"
+                   "4. Бот берет карты, пока не наберет определенное количество очков.\n"
+                   "5. Побеждает тот, кто ближе к 21 очкам, но не переберет.\n"
+                   "6. Если у игрока больше 21 очков, он проигрывает.\n");
+
+    QPixmap pixmap(":/game/images/resources/rules.png");
+
+    const int iconWidth = 64;
+    const int iconHeight = 64;
+    pixmap = pixmap.scaled(iconWidth, iconHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+    msgBox.setIconPixmap(pixmap);
+
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+
+    msgBox.exec();
+}
+
+void MainWindow::on_actionRule2_triggered()
+{
+    QMessageBox msgBox(this);
+
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setWindowTitle("Правила игры против другого игрока");
+
+    msgBox.setText("1. В игре участвуют два игрока.\n"
+                   "2. Каждый игрок получает по две карты, открытые для обоих игроков.\n"
+                   "3. Игроки по очереди могут взять карту (Hit) или пропустить ход (Stand).\n"
+                   "4. Побеждает тот, кто набрал больше очков, но не перебрал 21.\n"
+                   "5. Если у одного из игроков больше 21 очков, он проигрывает.\n"
+                   "6. Если у обоих игроков очки равны, это ничья.");
+
+    QPixmap pixmap(":/game/images/resources/rules.png");
+
+    const int iconWidth = 64;
+    const int iconHeight = 64;
+    pixmap = pixmap.scaled(iconWidth, iconHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+    msgBox.setIconPixmap(pixmap);
+
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+
+    msgBox.exec();
+}
+
+void MainWindow::startBackgroundMusic()
+{
+    m_player->setSource(QUrl(m_playlist[m_currentTrackIndex]));
+
+    m_player->play();
+}
+
+void MainWindow::playNextTrack()
+{
+    m_currentTrackIndex++;
+
+    if (m_currentTrackIndex >= m_playlist.size()) {
+        m_currentTrackIndex = 0;
+    }
+
+    m_player->setSource(QUrl(m_playlist[m_currentTrackIndex]));
+
+    m_player->play();
+}
+
+void MainWindow::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
+{
+    if (status == QMediaPlayer::EndOfMedia) {
+        playNextTrack();
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Закрытие приложения",
+                                  "Вы уверены, что хотите выйти?",
+                                  QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        QCoreApplication::quit();
+    } else {
+        event->ignore();
+    }
+}
+
+void MainWindow::on_actionMute_triggered()
+{
+    m_audioOutput->setVolume(0);
+    ui->actionMute->setEnabled(false);
+    ui->actionUnmute->setEnabled(true);
+}
+
+void MainWindow::on_actionUnmute_triggered()
+{
+    m_audioOutput->setVolume(50);
+    ui->actionMute->setEnabled(true);
+    ui->actionUnmute->setEnabled(false);
 }

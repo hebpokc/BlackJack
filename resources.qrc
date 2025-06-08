@@ -10,6 +10,9 @@
         <file>resources/bot.png</file>
         <file>resources/take_card.png</file>
         <file>resources/new_game.png</file>
+        <file>resources/rules.png</file>
+        <file>resources/win.png</file>
+        <file>resources/lose.png</file>
     </qresource>
     <qresource prefix="/game/cards">
         <file>resources/cards/2C.png</file>
@@ -65,5 +68,11 @@
         <file>resources/cards/QH.png</file>
         <file>resources/cards/QS.png</file>
         <file>resources/cards/back.png</file>
+    </qresource>
+    <qresource prefix="/music">
+        <file>resources/music/1.mp3</file>
+        <file>resources/music/2.mp3</file>
+        <file>resources/music/3.mp3</file>
+        <file>resources/music/4.mp3</file>
     </qresource>
 </RCC>
