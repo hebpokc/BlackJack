@@ -1,6 +1,69 @@
 <RCC>
-    <qresource prefix="/new/prefix1">
-        <file>background.jpg</file>
-        <file>blackjack_icon.png</file>
+    <qresource prefix="/menu/images">
+        <file>resources/background.jpg</file>
+        <file>resources/blackjack_icon.png</file>
+    </qresource>
+    <qresource prefix="/game/images">
+        <file>resources/skip_card.png</file>
+        <file>resources/game_background.jpg</file>
+        <file>resources/player.png</file>
+        <file>resources/bot.png</file>
+        <file>resources/take_card.png</file>
+        <file>resources/new_game.png</file>
+    </qresource>
+    <qresource prefix="/game/cards">
+        <file>resources/cards/2C.png</file>
+        <file>resources/cards/2D.png</file>
+        <file>resources/cards/2H.png</file>
+        <file>resources/cards/2S.png</file>
+        <file>resources/cards/3C.png</file>
+        <file>resources/cards/3D.png</file>
+        <file>resources/cards/3H.png</file>
+        <file>resources/cards/3S.png</file>
+        <file>resources/cards/4C.png</file>
+        <file>resources/cards/4D.png</file>
+        <file>resources/cards/4H.png</file>
+        <file>resources/cards/4S.png</file>
+        <file>resources/cards/5C.png</file>
+        <file>resources/cards/5D.png</file>
+        <file>resources/cards/5H.png</file>
+        <file>resources/cards/5S.png</file>
+        <file>resources/cards/6C.png</file>
+        <file>resources/cards/6D.png</file>
+        <file>resources/cards/6H.png</file>
+        <file>resources/cards/6S.png</file>
+        <file>resources/cards/7C.png</file>
+        <file>resources/cards/7D.png</file>
+        <file>resources/cards/7H.png</file>
+        <file>resources/cards/7S.png</file>
+        <file>resources/cards/8C.png</file>
+        <file>resources/cards/8D.png</file>
+        <file>resources/cards/8H.png</file>
+        <file>resources/cards/8S.png</file>
+        <file>resources/cards/9C.png</file>
+        <file>resources/cards/9D.png</file>
+        <file>resources/cards/9H.png</file>
+        <file>resources/cards/9S.png</file>
+        <file>resources/cards/10C.png</file>
+        <file>resources/cards/10D.png</file>
+        <file>resources/cards/10H.png</file>
+        <file>resources/cards/10S.png</file>
+        <file>resources/cards/AC.png</file>
+        <file>resources/cards/AD.png</file>
+        <file>resources/cards/AH.png</file>
+        <file>resources/cards/AS.png</file>
+        <file>resources/cards/JC.png</file>
+        <file>resources/cards/JD.png</file>
+        <file>resources/cards/JH.png</file>
+        <file>resources/cards/JS.png</file>
+        <file>resources/cards/KC.png</file>
+        <file>resources/cards/KD.png</file>
+        <file>resources/cards/KH.png</file>
+        <file>resources/cards/KS.png</file>
+        <file>resources/cards/QC.png</file>
+        <file>resources/cards/QD.png</file>
+        <file>resources/cards/QH.png</file>
+        <file>resources/cards/QS.png</file>
+        <file>resources/cards/back.png</file>
     </qresource>
 </RCC>

@@ -13,18 +13,23 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+        src/game/main.cpp
+        src/gui/mainwindow.cpp
+        src/gui/mainwindow.h
+        src/gui/mainwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(BlackJack
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        menuwindow.h menuwindow.cpp menuwindow.ui
+        src/gui/menuwindow.h src/gui/menuwindow.cpp src/gui/menuwindow.ui
         resources.qrc
+        src/game/card.h src/game/card.cpp
+        src/game/desk.h src/game/desk.cpp
+        src/game/hand.h src/game/hand.cpp
+        src/game/botplayer.h src/game/botplayer.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET BlackJack APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

@@ -1,11 +1,11 @@
 #include <QApplication>
-#include "MenuWindow.h"
+#include "../gui/MenuWindow.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    app.setWindowIcon(QIcon(":/new/prefix1/blackjack_icon.png"));
+    app.setWindowIcon(QIcon(":/menu/images/resources/blackjack_icon.png"));
 
     MenuWindow w;
     w.show();

@@ -2,6 +2,7 @@
 #include "ui_MenuWindow.h"
 #include <QApplication>
 #include <QMessageBox>
+#include "mainwindow.h"
 
 MenuWindow::MenuWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,7 +10,7 @@ MenuWindow::MenuWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    QPixmap bkgnd(":/new/prefix1/background.jpg");
+    QPixmap bkgnd(":/menu/images/resources/background.jpg");
     bkgnd = bkgnd.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
 
     QPalette palette;
@@ -24,8 +25,10 @@ MenuWindow::~MenuWindow()
 
 void MenuWindow::on_playBot_clicked()
 {
-    QMessageBox::information(this, "Играть против бота", "Запуск игры против бота (заглушка)");
-    // TODO: Запуск игрового окна против бота
+    MainWindow *game = new MainWindow(this);
+    game->setAttribute(Qt::WA_DeleteOnClose);
+    game->show();
+    this->hide();
 }
 
 void MenuWindow::on_playPlayer_clicked()
