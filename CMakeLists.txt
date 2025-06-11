@@ -30,6 +30,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/game/desk.h src/game/desk.cpp
         src/game/hand.h src/game/hand.cpp
         src/game/botplayer.h src/game/botplayer.cpp
+        src/gui/multiplayermainwindow.h src/gui/multiplayermainwindow.cpp src/gui/multiplayermainwindow.ui
+
 
     )
 # Define target properties for Android with Qt 6 as:

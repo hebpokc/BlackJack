@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QMessageBox>
 #include "mainwindow.h"
+#include "multiplayermainwindow.h"
 
 MenuWindow::MenuWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -33,8 +34,9 @@ void MenuWindow::on_playBot_clicked()
 
 void MenuWindow::on_playPlayer_clicked()
 {
-    QMessageBox::information(this, "Играть против игрока", "Запуск игры против другого игрока (заглушка)");
-    // TODO: Запуск игрового окна для 2 игроков
+    MultiplayerMainWindow *game = new MultiplayerMainWindow(this);
+    game->show();
+    this->hide();
 }
 
 void MenuWindow::on_exit_clicked()

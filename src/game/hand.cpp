@@ -26,3 +26,7 @@ int Hand::getValue() const {
     }
     return total;
 }
+
+void Hand::clear() {
+    m_cards.clear();  // Очищаем все карты в руке
+}

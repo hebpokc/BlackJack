@@ -1,16 +1,15 @@
-#include "mainwindow.h"
+#include "multiplayermainwindow.h"
 #include "menuwindow.h"
-#include "./ui_mainwindow.h"
+#include "ui_multiplayermainwindow.h"
 #include <QMessageBox>
 #include <QMediaPlayer>
 #include <QAudioOutput>
 #include <QUrl>
 #include <QCloseEvent>
 
-MainWindow::MainWindow(QWidget *parent)
+MultiplayerMainWindow::MultiplayerMainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , m_playerTurn(true)
+    , ui(new Ui::MultiplayerMainWindow)
     , m_currentTrackIndex(0)
 {
     ui->setupUi(this);
@@ -34,53 +33,62 @@ MainWindow::MainWindow(QWidget *parent)
                << "qrc:/music/resources/music/3.mp3"
                << "qrc:/music/resources/music/4.mp3";
 
-    connect(m_player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::onMediaStatusChanged);
+    connect(m_player, &QMediaPlayer::mediaStatusChanged, this, &MultiplayerMainWindow::onMediaStatusChanged);
 
     startBackgroundMusic();
+
+    m_isPlayer1Turn = true;
 
     startNewGame();
 }
 
-MainWindow::~MainWindow()
+MultiplayerMainWindow::~MultiplayerMainWindow()
 {
     delete ui;
     delete m_player;
     delete m_audioOutput;
 }
 
-void MainWindow::startNewGame() {
+void MultiplayerMainWindow::startNewGame() {
     m_desk.shuffle();
-    m_playerHand = Hand();
-    m_bot = BotPlayer();
-    m_playerTurn = true;
 
-    // Раздаем по 2 карты игроку и боту
-    m_playerHand.addCard(m_desk.draw());
-    m_playerHand.addCard(m_desk.draw());
+    m_player1Hand.clear();
+    m_player2Hand.clear();
 
-    m_bot.addCard(m_desk.draw());
-    m_bot.addCard(m_desk.draw());
+    // Раздаем по 2 карты игрокам
+    m_player1Hand.addCard(m_desk.draw());
+    m_player1Hand.addCard(m_desk.draw());
+
+    m_player2Hand.addCard(m_desk.draw());
+    m_player2Hand.addCard(m_desk.draw());
 
     updateUI();
+
+    ui->whooseTurn->setText("Текущий ход: игрок 1");
 
     ui->buttonHit->setEnabled(true);
     ui->buttonStand->setEnabled(true);
 }
 
-void MainWindow::updateUI() {
-    // Получаем QHBoxLayout для отображения карт
-    QLayout* playerLayout = ui->widgetPlayerCards->layout();
-    QLayout* botLayout = ui->widgetBotCards->layout();
+void MultiplayerMainWindow::updateUI()
+{
+    QLayout* player1Layout = ui->widgetPlayer1Cards->layout();
+    QLayout* player2Layout = ui->widgetPlayer2Cards->layout();
+    // Обновляем карты на экране
+    displayCards(m_player1Hand.getCards(), player1Layout);
+    displayCards(m_player2Hand.getCards(), player2Layout);
 
-    // Отображаем карты
-    displayCards(m_playerHand.getCards(), playerLayout);
-    ui->labelPlayerScore->setText("Очки: " + QString::number(m_playerHand.getValue()));
-
-    displayCards(m_bot.getCards(), botLayout);
-    ui->labelBotScore->setText("Очки: ??");  // Пока не показываем очки
+    updatePlayerScores();
 }
 
-void MainWindow::displayCards(const std::vector<Card>& cards, QLayout* layout)
+void MultiplayerMainWindow::updatePlayerScores()
+{
+    // Обновляем счёт для обоих игроков
+    ui->labelPlayer1Score->setText("Очки: " + QString::number(m_player1Hand.getValue()));
+    ui->labelPlayer2Score->setText("Очки: " + QString::number(m_player2Hand.getValue()));
+}
+
+void MultiplayerMainWindow::displayCards(const std::vector<Card>& cards, QLayout* layout)
 {
     // Удаляем старые виджеты из layout
     if (!layout) return;
@@ -113,111 +121,41 @@ void MainWindow::displayCards(const std::vector<Card>& cards, QLayout* layout)
     }
 }
 
-void MainWindow::displayBotCards(const std::vector<Card>& cards, QLayout* layout, bool revealAll)
+void MultiplayerMainWindow::checkGameOver()
 {
-    // Удаляем старые виджеты из layout
-    if (!layout) return;
-
-    while (QLayoutItem* item = layout->takeAt(0)) {
-        if (QWidget* widget = item->widget()) {
-            widget->deleteLater(); // Удаляем старые карты
-        }
-        delete item;
+    if (m_player1Hand.getValue() > 21) {
+        endGame("Игрок 2 выиграл!");
+        startNewGame();
+        return;
     }
 
-    // Добавляем карты бота в layout
-    const int cardWidth = 60;
-    const int cardHeight = 90;
+    if (m_player2Hand.getValue() > 21) {
+        endGame("Игрок 1 выиграл!");
+        startNewGame();
+        return;
+    }
 
-    for (size_t i = 0; i < cards.size(); ++i) {
-        QLabel* lbl = new QLabel();
-        QPixmap pix;
-
-        if (i == 0 || revealAll) {
-            // Показываем карту, если это первая карта или если revealAll=true
-            pix.load(cards[i].getImagePath());
-        } else {
-            pix.load(":/cards/back.png");
-        }
-
-        lbl->setPixmap(pix.scaled(cardWidth, cardHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        lbl->setFixedSize(cardWidth, cardHeight);
-        layout->addWidget(lbl);
+    if (m_player1Hand.getValue() == 21 && m_player2Hand.getValue() == 21) {
+        endGame("Ничья! У обоих игроков 21!");
+        startNewGame();
     }
 }
 
-
-void MainWindow::on_buttonHit_clicked() {
-    if (!m_playerTurn) return;
-
-    m_playerHand.addCard(m_desk.draw());
-    updateUI();
-
-    if (m_playerHand.getValue() > 21) {
-        endGame("Перебор! Вы проиграли");
-    }
-}
-
-void MainWindow::on_buttonStand_clicked() {
-    if (!m_playerTurn) return;
-
-    m_playerTurn = false;
-    ui->buttonHit->setEnabled(false);
-    ui->buttonStand->setEnabled(false);
-
-    botTurn();
-}
-
-void MainWindow::botTurn() {
-    // Пока бот ходит, показываем только одну карту
-    displayBotCards(m_bot.getCards(), ui->widgetBotCards->layout(), false); // Показываем только первую карту
-    ui->labelBotScore->setText("Очки: ??");
-
-    // Ход бота — бот берет карты, пока у него меньше 17 очков
-    while (m_bot.shouldHit()) {
-        Card c = m_desk.draw();
-        m_bot.addCard(c);
-
-        // Обновляем отображение карт
-        displayBotCards(m_bot.getCards(), ui->widgetBotCards->layout(), false);
-        ui->labelBotScore->setText("Очки: ??");
-    }
-
-    // После того как бот завершил ход, раскрываем все карты
-    displayBotCards(m_bot.getCards(), ui->widgetBotCards->layout(), true); // Показываем все карты
-    ui->labelBotScore->setText("Очки: " + QString::number(m_bot.getValue()));
-
-    int playerScore = m_playerHand.getValue();
-    int botScore = m_bot.getValue();
-
-    if (botScore > 21 || playerScore > botScore) {
-        endGame("Вы выиграли!");
-    } else if (playerScore == botScore) {
-        endGame("Ничья!");
-    } else {
-        endGame("Вы проиграли!");
-    }
-}
-
-void MainWindow::on_buttonNewGame_clicked() {
-    startNewGame();
-}
-
-void MainWindow::endGame(const QString &result) {
+void MultiplayerMainWindow::endGame(const QString &result) {
     QMessageBox msgBox(this);
 
-    if (result == "Вы выиграли!") {
-        QPixmap pixmap(":/game/images/resources/win.png");
+    if (result == "Игрок 2 выиграл!") {
+        QPixmap pixmap(":/game/images/resources/player2.png");
         pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
         msgBox.setIconPixmap(pixmap);
     }
-    else if (result == "Ничья!") {
+    else if (result == "Ничья! У обоих игроков 21!") {
         QPixmap pixmap(":/game/images/resources/draw.png");
         pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
         msgBox.setIconPixmap(pixmap);
     }
     else {
-        QPixmap pixmap(":/game/images/resources/lose.png");
+        QPixmap pixmap(":/game/images/resources/player.png");
         pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
         msgBox.setIconPixmap(pixmap);
     }
@@ -234,40 +172,79 @@ void MainWindow::endGame(const QString &result) {
     ui->buttonStand->setEnabled(false);
 }
 
-void MainWindow::on_actionExit_triggered()
+void MultiplayerMainWindow::on_buttonHit_clicked() {
+    if (m_isPlayer1Turn) {
+        // Игрок 1 берет карту
+        m_player1Hand.addCard(m_desk.draw());
+    } else {
+        // Игрок 2 берет карту
+        m_player2Hand.addCard(m_desk.draw());
+    }
+
+    // Обновляем интерфейс с картами
+    updateUI();
+    checkGameOver();
+    switchTurns();
+}
+
+void MultiplayerMainWindow::on_buttonStand_clicked() {
+    checkGameOver();
+    switchTurns();
+}
+
+void MultiplayerMainWindow::switchTurns()
+{
+    // Переключаем ход между игроками
+    m_isPlayer1Turn = !m_isPlayer1Turn;
+
+    if (m_isPlayer1Turn) {
+        ui->whooseTurn->setText("Текущий ход: игрок 1");
+    } else {
+        ui->whooseTurn->setText("Текущий ход: игрок 2");
+    }
+
+    updateUI();
+}
+
+void MultiplayerMainWindow::on_buttonNewGame_clicked() {
+    startNewGame();
+}
+
+void MultiplayerMainWindow::on_actionExit_triggered()
 {
     this->close();
 }
 
-void MainWindow::on_actionHit_triggered()
+void MultiplayerMainWindow::on_actionHit_triggered()
 {
-    if (!m_playerTurn) return;
-
-    m_playerHand.addCard(m_desk.draw());
-    updateUI();
-
-    if (m_playerHand.getValue() > 21) {
-        endGame("Перебор! Вы проиграли");
+    if (m_isPlayer1Turn) {
+        // Игрок 1 берет карту
+        Card c = m_desk.draw();
+        m_player1Hand.addCard(c);
+    } else {
+        // Игрок 2 берет карту
+        Card c = m_desk.draw();
+        m_player2Hand.addCard(c);
     }
+
+    // Обновляем интерфейс с картами
+    updateUI();
+    checkGameOver();
+    switchTurns();
 }
 
-void MainWindow::on_actionStand_triggered()
+void MultiplayerMainWindow::on_actionStand_triggered()
 {
-    if (!m_playerTurn) return;
-
-    m_playerTurn = false;
-    ui->buttonHit->setEnabled(false);
-    ui->buttonStand->setEnabled(false);
-
-    botTurn();
+    switchTurns();
+    checkGameOver();
 }
 
-void MainWindow::on_actionNewGame_triggered()
+void MultiplayerMainWindow::on_actionNewGame_triggered()
 {
     startNewGame();
 }
 
-void MainWindow::on_actionRule1_triggered()
+void MultiplayerMainWindow::on_actionRule1_triggered()
 {
     QMessageBox msgBox(this);
 
@@ -295,7 +272,7 @@ void MainWindow::on_actionRule1_triggered()
     msgBox.exec();
 }
 
-void MainWindow::on_actionRule2_triggered()
+void MultiplayerMainWindow::on_actionRule2_triggered()
 {
     QMessageBox msgBox(this);
 
@@ -323,14 +300,14 @@ void MainWindow::on_actionRule2_triggered()
     msgBox.exec();
 }
 
-void MainWindow::startBackgroundMusic()
+void MultiplayerMainWindow::startBackgroundMusic()
 {
     m_player->setSource(QUrl(m_playlist[m_currentTrackIndex]));
 
     m_player->play();
 }
 
-void MainWindow::playNextTrack()
+void MultiplayerMainWindow::playNextTrack()
 {
     m_currentTrackIndex++;
 
@@ -343,14 +320,14 @@ void MainWindow::playNextTrack()
     m_player->play();
 }
 
-void MainWindow::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
+void MultiplayerMainWindow::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
     if (status == QMediaPlayer::EndOfMedia) {
         playNextTrack();
     }
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
+void MultiplayerMainWindow::closeEvent(QCloseEvent *event)
 {
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "Закрытие приложения",
@@ -366,14 +343,14 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
-void MainWindow::on_actionMute_triggered()
+void MultiplayerMainWindow::on_actionMute_triggered()
 {
     m_audioOutput->setVolume(0);
     ui->actionMute->setEnabled(false);
     ui->actionUnmute->setEnabled(true);
 }
 
-void MainWindow::on_actionUnmute_triggered()
+void MultiplayerMainWindow::on_actionUnmute_triggered()
 {
     m_audioOutput->setVolume(50);
     ui->actionMute->setEnabled(true);

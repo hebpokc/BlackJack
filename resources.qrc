@@ -13,6 +13,8 @@
         <file>resources/rules.png</file>
         <file>resources/win.png</file>
         <file>resources/lose.png</file>
+        <file>resources/draw.png</file>
+        <file>resources/player2.png</file>
     </qresource>
     <qresource prefix="/game/cards">
         <file>resources/cards/2C.png</file>

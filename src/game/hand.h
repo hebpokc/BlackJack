@@ -10,6 +10,7 @@ public:
     void addCard(const Card& card);
     int getValue() const;
     std::vector<Card> getCards() const;
+    void clear();
 
 private:
     std::vector<Card> m_cards;
