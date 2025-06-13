@@ -13,6 +13,16 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Multimedia)
 
+# find_package(GTest REQUIRED)
+
+# include_directories(${GTEST_INCLUDE_DIRS})
+# link_directories(${GTEST_LIBRARIES})
+
+# add_executable(tests test_main.cpp)
+
+# add_subdirectory(googletest)
+
+
 set(PROJECT_SOURCES
         src/game/main.cpp
         src/gui/mainwindow.cpp
@@ -34,6 +44,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/game/player.h
         leaderboard.txt
         src/gui/clickerwindow.h src/gui/clickerwindow.cpp src/gui/clickerwindow.ui
+        tests/BlackJack_tests.cpp
 
 
 
