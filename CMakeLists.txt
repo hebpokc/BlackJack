@@ -31,6 +31,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/game/hand.h src/game/hand.cpp
         src/game/botplayer.h src/game/botplayer.cpp
         src/gui/multiplayermainwindow.h src/gui/multiplayermainwindow.cpp src/gui/multiplayermainwindow.ui
+        src/game/player.h
+        leaderboard.txt
+        src/gui/clickerwindow.h src/gui/clickerwindow.cpp src/gui/clickerwindow.ui
+
+
 
 
     )

@@ -1,17 +1,26 @@
 #include "mainwindow.h"
 #include "menuwindow.h"
+#include "clickerwindow.h"
+#include "../game/player.h"
 #include "./ui_mainwindow.h"
 #include <QMessageBox>
 #include <QMediaPlayer>
 #include <QAudioOutput>
 #include <QUrl>
 #include <QCloseEvent>
+#include <QList>
+#include <QFile>
+#include <QInputDialog>
+
+const QString LEADERBOARD_FILE = "leaderboard.txt";
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_playerTurn(true)
     , m_currentTrackIndex(0)
+    , m_balance(100)  // Изначальный баланс 100 монет
+    , m_bet(0)
 {
     ui->setupUi(this);
 
@@ -37,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::onMediaStatusChanged);
 
     startBackgroundMusic();
+
+    ui->labelBalance->setText("Баланс: \n" + QString::number(m_balance) + " монет 🪙");
 
     startNewGame();
 }
@@ -65,6 +76,10 @@ void MainWindow::startNewGame() {
 
     ui->buttonHit->setEnabled(true);
     ui->buttonStand->setEnabled(true);
+
+    m_bet = 0;
+
+    ui->buttonPlaceBet->setEnabled(true);
 }
 
 void MainWindow::updateUI() {
@@ -168,6 +183,30 @@ void MainWindow::on_buttonStand_clicked() {
     botTurn();
 }
 
+void MainWindow::on_buttonNewGame_clicked() {
+    startNewGame();
+}
+
+void MainWindow::on_buttonPlaceBet_clicked()
+{
+    bool ok;
+    int bet = ui->lineEditBet->text().toInt(&ok);
+
+    if (!ok || bet <= 0 || bet > m_balance) {
+        QMessageBox::warning(this, "Ошибка", "Ставка некорректна или превышает ваш баланс.");
+        return;
+    }
+
+    m_bet = bet;
+
+    QMessageBox::information(this, "Ставка принята", "Ваша ставка: " + QString::number(m_bet) + " монет 🪙");
+
+    m_balance -= m_bet;
+    ui->labelBalance->setText("Баланс: \n" + QString::number(m_balance) + " монет 🪙");
+
+    ui->buttonPlaceBet->setEnabled(false);
+}
+
 void MainWindow::botTurn() {
     // Пока бот ходит, показываем только одну карту
     displayBotCards(m_bot.getCards(), ui->widgetBotCards->layout(), false); // Показываем только первую карту
@@ -192,15 +231,22 @@ void MainWindow::botTurn() {
 
     if (botScore > 21 || playerScore > botScore) {
         endGame("Вы выиграли!");
+        if (playerScore != 21) {
+            m_balance += m_bet * 1.5;
+
+        }
+        else {
+            m_balance += m_bet * 2;
+        }
+        ui->labelBalance->setText("Баланс: \n" + QString::number(m_balance) + " монет 🪙");
     } else if (playerScore == botScore) {
         endGame("Ничья!");
-    } else {
+        m_balance += m_bet;
+        ui->labelBalance->setText("Баланс: \n" + QString::number(m_balance) + " монет 🪙");
+    }
+    else {
         endGame("Вы проиграли!");
     }
-}
-
-void MainWindow::on_buttonNewGame_clicked() {
-    startNewGame();
 }
 
 void MainWindow::endGame(const QString &result) {
@@ -378,4 +424,117 @@ void MainWindow::on_actionUnmute_triggered()
     m_audioOutput->setVolume(50);
     ui->actionMute->setEnabled(true);
     ui->actionUnmute->setEnabled(false);
+}
+
+QList<Player> MainWindow::readLeaderboard()
+{
+    QList<Player> leaderboard;
+
+    QFile file(LEADERBOARD_FILE);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            QStringList parts = line.split(" | ");
+            if (parts.size() == 2) {
+                Player player;
+                player.name = parts[0];
+                player.balance = parts[1].toInt();
+                leaderboard.append(player);
+            }
+        }
+        file.close();
+    }
+    return leaderboard;
+}
+
+void MainWindow::writeLeaderboard(const QList<Player>& leaderboard)
+{
+    QFile file(LEADERBOARD_FILE);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        for (const Player& player : leaderboard) {
+            out << player.name << " | " << player.balance << "\n";
+        }
+        file.close();
+    }
+}
+
+void MainWindow::on_actionSaveResult_triggered()
+{
+    // Запрашиваем имя пользователя через MessageBox
+    bool ok;
+    QString name = QInputDialog::getText(this, "Введите ник", "Введите ваш ник:", QLineEdit::Normal, "", &ok);
+
+    if (ok && !name.isEmpty()) {
+        // Сохраняем результат в таблицу лидеров
+        Player newPlayer;
+        newPlayer.name = name;
+        newPlayer.balance = m_balance;
+
+        // Чтение текущей таблицы лидеров
+        QList<Player> leaderboard = readLeaderboard();
+
+        // Добавляем нового игрока в таблицу
+        leaderboard.append(newPlayer);
+
+        // Сортируем таблицу по балансу
+        std::sort(leaderboard.begin(), leaderboard.end());
+
+        // Ограничиваем таблицу 10 лучшими игроками
+        if (leaderboard.size() > 10) {
+            leaderboard = leaderboard.mid(0, 10);
+        }
+
+        // Записываем обновленную таблицу в файл
+        writeLeaderboard(leaderboard);
+
+        QMessageBox::information(this, "Результат сохранен", "Ваш результат был успешно сохранён.");
+    }
+}
+
+void MainWindow::on_actionShowLeaderboard_triggered()
+{
+    // Чтение таблицы лидеров
+    QList<Player> leaderboard = readLeaderboard();
+
+    // Формируем текст для отображения в MessageBox
+    QString leaderboardText;
+
+    if (leaderboard.isEmpty()) {
+        leaderboardText = "Таблица лидеров пуста";
+    } else {
+        for (int i = 0; i < leaderboard.size(); ++i) {
+            leaderboardText += QString::number(i + 1) + ". " + leaderboard[i].name + " | " + QString::number(leaderboard[i].balance) + " монет 🪙\n";
+        }
+    }
+
+    // Показываем таблицу лидеров
+    QMessageBox msgBox(this);
+
+    QPixmap pixmap(":/game/images/resources/leaderboard.png");
+    const int iconWidth = 64;
+    const int iconHeight = 64;
+    pixmap = pixmap.scaled(iconWidth, iconHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    msgBox.setIconPixmap(pixmap);
+
+    msgBox.setWindowTitle("Таблица лидеров");
+    msgBox.setText(leaderboardText);
+
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+
+    msgBox.exec();
+}
+
+void MainWindow::on_actionClicker_triggered()
+{
+    ClickerWindow *clickerWindow = new ClickerWindow(this);
+    clickerWindow->show();
+}
+
+void MainWindow::updateBalance(int reward)
+{
+    m_balance += reward;
+    ui->labelBalance->setText("Баланс: \n" + QString::number(m_balance) + " монет 🪙");
 }

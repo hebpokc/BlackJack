@@ -29,8 +29,8 @@
    <widget class="QPushButton" name="buttonHit">
     <property name="geometry">
      <rect>
-      <x>350</x>
-      <y>740</y>
+      <x>250</x>
+      <y>650</y>
       <width>151</width>
       <height>41</height>
      </rect>
@@ -58,8 +58,8 @@
    <widget class="QPushButton" name="buttonStand">
     <property name="geometry">
      <rect>
-      <x>560</x>
-      <y>740</y>
+      <x>460</x>
+      <y>650</y>
       <width>151</width>
       <height>41</height>
      </rect>
@@ -87,8 +87,8 @@
    <widget class="QPushButton" name="buttonNewGame">
     <property name="geometry">
      <rect>
-      <x>770</x>
-      <y>740</y>
+      <x>670</x>
+      <y>650</y>
       <width>151</width>
       <height>41</height>
      </rect>
@@ -117,7 +117,7 @@
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>360</y>
+      <y>300</y>
       <width>64</width>
       <height>64</height>
      </rect>
@@ -136,7 +136,7 @@
     <property name="geometry">
      <rect>
       <x>710</x>
-      <y>360</y>
+      <y>300</y>
       <width>64</width>
       <height>64</height>
      </rect>
@@ -155,7 +155,7 @@
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>610</y>
+      <y>550</y>
       <width>219</width>
       <height>91</height>
      </rect>
@@ -173,7 +173,7 @@
     <property name="geometry">
      <rect>
       <x>710</x>
-      <y>610</y>
+      <y>550</y>
       <width>219</width>
       <height>91</height>
      </rect>
@@ -191,7 +191,7 @@
     <property name="geometry">
      <rect>
       <x>270</x>
-      <y>430</y>
+      <y>370</y>
       <width>341</width>
       <height>201</height>
      </rect>
@@ -202,12 +202,93 @@
     <property name="geometry">
      <rect>
       <x>670</x>
-      <y>430</y>
+      <y>370</y>
       <width>331</width>
       <height>201</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="widgetBotCards"/>
+   </widget>
+   <widget class="QLabel" name="labelBalance">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>730</y>
+      <width>221</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Comic Sans MS</family>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEditBet">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>720</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelBet">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>720</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Ставка</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="buttonPlaceBet">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>650</y>
+      <width>151</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string> Сделать ставку</string>
+    </property>
+    <property name="icon">
+     <iconset resource="../../resources.qrc">
+      <normaloff>:/game/images/resources/bet.png</normaloff>:/game/images/resources/bet.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>24</width>
+      <height>24</height>
+     </size>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -247,10 +328,25 @@
     <addaction name="actionUnmute"/>
     <addaction name="actionMute"/>
    </widget>
+   <widget class="QMenu" name="leaderboard">
+    <property name="title">
+     <string>Таблица лидеров</string>
+    </property>
+    <addaction name="actionShowLeaderboard"/>
+    <addaction name="actionSaveResult"/>
+   </widget>
+   <widget class="QMenu" name="minigames">
+    <property name="title">
+     <string>Мини-игры</string>
+    </property>
+    <addaction name="actionClicker"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="actions"/>
    <addaction name="rules"/>
    <addaction name="music"/>
+   <addaction name="leaderboard"/>
+   <addaction name="minigames"/>
   </widget>
   <action name="actionHit">
    <property name="text">
@@ -290,6 +386,21 @@
   <action name="actionMute">
    <property name="text">
     <string>Выключить звук</string>
+   </property>
+  </action>
+  <action name="actionShowLeaderboard">
+   <property name="text">
+    <string>Показать</string>
+   </property>
+  </action>
+  <action name="actionSaveResult">
+   <property name="text">
+    <string>Вписать свое имя в историю</string>
+   </property>
+  </action>
+  <action name="actionClicker">
+   <property name="text">
+    <string>Кликер</string>
    </property>
   </action>
  </widget>

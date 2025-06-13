@@ -15,6 +15,9 @@
         <file>resources/lose.png</file>
         <file>resources/draw.png</file>
         <file>resources/player2.png</file>
+        <file>resources/bet.png</file>
+        <file>resources/leaderboard.png</file>
+        <file>resources/clicker_background.png</file>
     </qresource>
     <qresource prefix="/game/cards">
         <file>resources/cards/2C.png</file>
